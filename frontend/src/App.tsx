@@ -112,9 +112,10 @@ function App() {
   // FastAPI 백엔드 연동
   useEffect(() => {
     const fetchData = async () => {
+      const apiBase = import.meta.env.DEV ? 'http://127.0.0.1:8000' : '';
       try {
-        const catRes = await fetch('http://127.0.0.1:8000/api/categories');
-        const menuRes = await fetch('http://127.0.0.1:8000/api/menu');
+        const catRes = await fetch(`${apiBase}/api/categories`);
+        const menuRes = await fetch(`${apiBase}/api/menu`);
         
         if (catRes.ok && menuRes.ok) {
           const catData = await catRes.json();

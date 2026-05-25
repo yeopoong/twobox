@@ -24,10 +24,11 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
   const handlePlaceOrder = async () => {
     setStep(3); // Processing step
+    const apiBase = import.meta.env.DEV ? 'http://127.0.0.1:8000' : '';
 
     try {
       // Python FastAPI 백엔드로 주문 접수 API 요청
-      const response = await fetch('http://127.0.0.1:8000/api/orders', {
+      const response = await fetch(`${apiBase}/api/orders`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
