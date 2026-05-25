@@ -1,0 +1,56 @@
+/* frontend/src/styles/variables.css */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  /* Color Palette - Premium Warm Orange & Dark Modern */
+  --bg-primary: #0F0E13;
+  --bg-secondary: #16151B;
+  --bg-tertiary: #1E1C24;
+  
+  --primary: #FF6F3C;
+  --primary-hover: #FF875C;
+  --primary-glow: rgba(255, 111, 60, 0.35);
+  
+  --secondary: #FFC045;
+  --secondary-glow: rgba(255, 192, 69, 0.2);
+  
+  --accent: #FF3F3F;
+  
+  /* Glassmorphism Styles */
+  --glass-bg: rgba(30, 28, 36, 0.65);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-blur: blur(20px);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  
+  /* Text Colors */
+  --text-primary: #FFFFFF;
+  --text-secondary: #A09EAD;
+  --text-muted: #6B687A;
+  --text-accent: #FFC045;
+  
+  /* Fonts */
+  --font-main: 'Outfit', 'Noto Sans KR', sans-serif;
+  
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  
+  /* Border Radius */
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-full: 9999px;
+  
+  /* Shadows */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.5);
+  
+  /* Animation / Transition */
+  --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
