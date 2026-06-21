@@ -1,10 +1,12 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import create_engine, Column, String, Integer, DateTime
+from sqlalchemy import create_engine, Column, String, Integer, DateTime, Boolean
 from sqlalchemy.orm import sessionmaker, Session, declarative_base
 from pydantic import BaseModel
 import uuid
 import datetime
+import random
+import string
 from typing import Dict, List
 import resend
 import os
@@ -25,6 +27,15 @@ class ReviewSessionModel(Base):
     rating = Column(Integer, nullable=True)
     review_text = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class CouponModel(Base):
+    __tablename__ = "coupons"
+    id = Column(String, primary_key=True, index=True) # e.g. 6-digit code
+    email = Column(String)
+    prize = Column(String)
+    is_used = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    used_at = Column(DateTime, nullable=True)
 
 Base.metadata.create_all(bind=engine)
 
@@ -62,6 +73,14 @@ class CouponRequest(BaseModel):
     email: str
     prize: str
     lang: str = "ko"
+
+class CouponResponse(BaseModel):
+    id: str
+    email: str
+    prize: str
+    is_used: bool
+    created_at: datetime.datetime
+    used_at: datetime.datetime | None = None
 
 # Connection Manager for WebSockets
 class ConnectionManager:
@@ -124,11 +143,22 @@ async def complete_session(session_id: str, db: Session = Depends(get_db)):
     return {"message": "Session completed successfully"}
 
 @app.post("/send-coupon")
-async def send_coupon_email(req: CouponRequest):
+async def send_coupon_email(req: CouponRequest, db: Session = Depends(get_db)):
     resend_api_key = os.getenv("RESEND_API_KEY")
     
+    # Generate random 6-character code
+    coupon_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+    
+    db_coupon = CouponModel(
+        id=coupon_code,
+        email=req.email,
+        prize=req.prize
+    )
+    db.add(db_coupon)
+    db.commit()
+    
     if not resend_api_key:
-        print(f"[MOCK EMAIL] To: {req.email}, Prize: {req.prize}")
+        print(f"[MOCK EMAIL] To: {req.email}, Prize: {req.prize}, Code: {coupon_code}")
         return {"message": "Mock email sent (Resend API Key not configured)"}
         
     try:
@@ -157,6 +187,12 @@ async def send_coupon_email(req: CouponRequest):
               <h1 style="color: #2774ae; margin-bottom: 5px;">TWOBOX CHICKEN</h1>
               <h2 style="color: #e51b23; margin-top: 0;">{body_title}</h2>
               <p style="font-size: 20px; font-weight: bold; background: #facc15; padding: 15px; border-radius: 8px;">{req.prize}</p>
+              
+              <div style="margin: 30px 0; padding: 20px; border: 2px solid #2774ae; border-radius: 8px; background: #f0f7ff;">
+                  <p style="margin: 0; color: #475569; font-size: 14px;">Coupon Code</p>
+                  <p style="margin: 5px 0 0 0; font-size: 32px; font-weight: 900; letter-spacing: 5px; color: #0f172a;">{coupon_code}</p>
+              </div>
+              
               <p style="color: #475569; margin-top: 20px; white-space: pre-line;">{body_desc}</p>
             </div>
           </body>
@@ -173,10 +209,30 @@ async def send_coupon_email(req: CouponRequest):
         email_response = resend.Emails.send(params)
         print(f"Resend sent: {email_response}")
         
-        return {"message": "Email sent successfully"}
+        return {"message": "Email sent successfully", "coupon_code": coupon_code}
     except Exception as e:
         print(f"Resend Error: {e}")
         raise HTTPException(status_code=500, detail="Failed to send email")
+
+@app.get("/coupons/{code}", response_model=CouponResponse)
+def verify_coupon(code: str, db: Session = Depends(get_db)):
+    coupon = db.query(CouponModel).filter(CouponModel.id == code.upper()).first()
+    if not coupon:
+        raise HTTPException(status_code=404, detail="Invalid coupon code")
+    return coupon
+
+@app.post("/coupons/{code}/use")
+def use_coupon(code: str, db: Session = Depends(get_db)):
+    coupon = db.query(CouponModel).filter(CouponModel.id == code.upper()).first()
+    if not coupon:
+        raise HTTPException(status_code=404, detail="Invalid coupon code")
+    if coupon.is_used:
+        raise HTTPException(status_code=400, detail="Coupon already used")
+        
+    coupon.is_used = True
+    coupon.used_at = datetime.datetime.utcnow()
+    db.commit()
+    return {"message": "Coupon successfully used", "prize": coupon.prize}
 
 # WebSocket Endpoint
 @app.websocket("/ws/{session_id}")

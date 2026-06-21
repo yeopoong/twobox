@@ -107,7 +107,7 @@ function App() {
   const [lang, setLang] = useState<Lang>('en');
   const t = DICT[lang];
 
-  const [step, setStep] = useState<'review' | 'qr' | 'roulette' | 'result'>('review');
+  const [step, setStep] = useState<'review' | 'qr' | 'roulette' | 'result' | 'staff'>('review');
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [reviewText, setReviewText] = useState('');
@@ -121,6 +121,13 @@ function App() {
   const [email, setEmail] = useState('');
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+
+  const [logoClicks, setLogoClicks] = useState(0);
+  const [lastLogoClick, setLastLogoClick] = useState(0);
+  
+  const [staffCode, setStaffCode] = useState('');
+  const [staffCouponResult, setStaffCouponResult] = useState<any>(null);
+  const [staffError, setStaffError] = useState('');
 
   // Update speech recognition language when lang changes
   useEffect(() => {
@@ -194,6 +201,56 @@ function App() {
     }
   };
 
+  const handleLogoClick = () => {
+    const now = Date.now();
+    if (now - lastLogoClick > 3000) {
+      setLogoClicks(1);
+    } else {
+      const newClicks = logoClicks + 1;
+      setLogoClicks(newClicks);
+      if (newClicks >= 5) {
+        setStep('staff');
+        setLogoClicks(0);
+        setStaffCode('');
+        setStaffCouponResult(null);
+        setStaffError('');
+      }
+    }
+    setLastLogoClick(now);
+  };
+
+  const handleVerifyCoupon = async () => {
+    setStaffError('');
+    setStaffCouponResult(null);
+    try {
+      const res = await fetch(`${API_BASE_URL}/coupons/${staffCode}`);
+      if (!res.ok) {
+        if (res.status === 404) setStaffError('Invalid coupon code');
+        else setStaffError('Error verifying coupon');
+        return;
+      }
+      const data = await res.json();
+      setStaffCouponResult(data);
+    } catch (e) {
+      setStaffError('Network error');
+    }
+  };
+
+  const handleUseCoupon = async () => {
+    setStaffError('');
+    try {
+      const res = await fetch(`${API_BASE_URL}/coupons/${staffCode}/use`, { method: 'POST' });
+      if (!res.ok) {
+        setStaffError('Failed to use coupon');
+        return;
+      }
+      setStaffCouponResult({ ...staffCouponResult, is_used: true });
+      alert('Coupon marked as USED!');
+    } catch (e) {
+      setStaffError('Network error');
+    }
+  };
+
   const handleSendEmail = async () => {
     if (!email.includes('@')) return;
     setIsSendingEmail(true);
@@ -250,15 +307,15 @@ function App() {
 
   return (
     <div className="kiosk-container" style={{ position: 'relative' }}>
-      <div style={{ position: 'absolute', top: '1rem', right: '1rem', display: 'flex', gap: '0.5rem', background: 'rgba(0,0,0,0.5)', padding: '0.5rem', borderRadius: '1rem', zIndex: 10 }}>
-        <button onClick={() => setLang('en')} style={{ background: lang === 'en' ? 'var(--accent)' : 'transparent', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '0.5rem', cursor: 'pointer', fontWeight: 'bold' }}>🇺🇸 EN</button>
-        <button onClick={() => setLang('ko')} style={{ background: lang === 'ko' ? 'var(--accent)' : 'transparent', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '0.5rem', cursor: 'pointer', fontWeight: 'bold' }}>🇰🇷 KO</button>
-        <button onClick={() => setLang('es')} style={{ background: lang === 'es' ? 'var(--accent)' : 'transparent', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '0.5rem', cursor: 'pointer', fontWeight: 'bold' }}>🇪🇸 ES</button>
-      </div>
+        <div className="language-selector">
+          <button className={`lang-btn ${lang === 'ko' ? 'active' : ''}`} onClick={() => setLang('ko')}>🇰🇷 한국어</button>
+          <button className={`lang-btn ${lang === 'en' ? 'active' : ''}`} onClick={() => setLang('en')}>🇺🇸 English</button>
+          <button className={`lang-btn ${lang === 'es' ? 'active' : ''}`} onClick={() => setLang('es')}>🇪🇸 Español</button>
+        </div>
 
       {step === 'review' && (
         <div className="glass-panel">
-          <div className="logo-container">
+          <div className="logo-container" onClick={handleLogoClick} style={{ cursor: 'pointer' }}>
             <div className="logo-two">TWO</div>
             <div className="logo-box">BOX</div>
           </div>
@@ -432,6 +489,56 @@ function App() {
             }}
           >
             {t.restart}
+          </button>
+        </div>
+      )}
+
+      {step === 'staff' && (
+        <div className="glass-panel" style={{ textAlign: 'center' }}>
+          <h1 style={{ color: 'var(--brand-blue)', marginBottom: '2rem' }}>Staff Dashboard</h1>
+          
+          <div className="email-container">
+            <input 
+              type="text" 
+              className="email-input" 
+              placeholder="Enter 6-digit coupon code"
+              value={staffCode}
+              onChange={(e) => setStaffCode(e.target.value.toUpperCase())}
+              style={{ textAlign: 'center', fontSize: '1.5rem', letterSpacing: '2px' }}
+              maxLength={6}
+            />
+            <button className="btn-primary" onClick={handleVerifyCoupon}>Verify Code</button>
+          </div>
+
+          {staffError && <p style={{ color: 'var(--brand-red)', fontWeight: 'bold' }}>{staffError}</p>}
+          
+          {staffCouponResult && (
+            <div style={{ background: 'rgba(255,255,255,0.1)', padding: '2rem', borderRadius: '12px', marginTop: '1rem' }}>
+              <p style={{ fontSize: '1.2rem', color: '#94a3b8' }}>{staffCouponResult.email}</p>
+              <h2 style={{ fontSize: '2.5rem', color: '#facc15', margin: '1rem 0' }}>{staffCouponResult.prize}</h2>
+              
+              {staffCouponResult.is_used ? (
+                <div style={{ background: 'rgba(229, 27, 35, 0.2)', color: 'var(--brand-red)', padding: '1rem', borderRadius: '8px', fontWeight: 'bold', fontSize: '1.5rem' }}>
+                  ALREADY USED
+                </div>
+              ) : (
+                <button 
+                  className="btn-primary" 
+                  style={{ background: 'var(--success)', width: '100%', marginTop: '1rem' }}
+                  onClick={handleUseCoupon}
+                >
+                  MARK AS USED
+                </button>
+              )}
+            </div>
+          )}
+
+          <button
+            className="btn-primary"
+            style={{ background: 'transparent', border: '2px solid rgba(255,255,255,0.2)', boxShadow: 'none', marginTop: '2rem' }}
+            onClick={() => setStep('review')}
+          >
+            Close Dashboard
           </button>
         </div>
       )}
