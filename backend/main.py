@@ -173,7 +173,7 @@ async def send_coupon_email(req: CouponRequest):
         
         msg.attach(MIMEText(html_content, 'html'))
         
-        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server = smtplib.SMTP('smtp.gmail.com', 587, timeout=5)
         server.starttls()
         server.login(smtp_email, smtp_password)
         server.send_message(msg)
