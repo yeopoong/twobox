@@ -334,6 +334,18 @@ function App() {
               className="roulette-wheel"
               style={{ transform: `rotate(${spinDegree}deg)` }}
             >
+              {t.prizes.map((prize, i) => {
+                const rotation = i * 60 + 30; // Center of each 60-degree slice
+                return (
+                  <div 
+                    key={i} 
+                    className="roulette-text"
+                    style={{ transform: `rotate(${rotation}deg)` }}
+                  >
+                    <span>{prize}</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
