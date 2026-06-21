@@ -6,9 +6,7 @@ from pydantic import BaseModel
 import uuid
 import datetime
 from typing import Dict, List
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import resend
 import os
 from dotenv import load_dotenv
 
@@ -127,18 +125,14 @@ async def complete_session(session_id: str, db: Session = Depends(get_db)):
 
 @app.post("/send-coupon")
 async def send_coupon_email(req: CouponRequest):
-    smtp_email = os.getenv("SMTP_EMAIL")
-    smtp_password = os.getenv("SMTP_PASSWORD")
+    resend_api_key = os.getenv("RESEND_API_KEY")
     
-    if not smtp_email or not smtp_password:
-        # If not configured, just log and return success (Mock mode)
+    if not resend_api_key:
         print(f"[MOCK EMAIL] To: {req.email}, Prize: {req.prize}")
-        return {"message": "Mock email sent (SMTP not configured)"}
+        return {"message": "Mock email sent (Resend API Key not configured)"}
         
     try:
-        msg = MIMEMultipart()
-        msg['From'] = smtp_email
-        msg['To'] = req.email
+        resend.api_key = resend_api_key
         
         # Simple i18n
         subject = "Your Twobox Chicken Coupon!"
@@ -156,8 +150,6 @@ async def send_coupon_email(req: CouponRequest):
         else:
             body_desc += "\nPlease show this email at the counter."
 
-        msg['Subject'] = subject
-        
         html_content = f"""
         <html>
           <body style="font-family: Arial, sans-serif; text-align: center; padding: 20px; background-color: #f8fafc;">
@@ -171,17 +163,19 @@ async def send_coupon_email(req: CouponRequest):
         </html>
         """
         
-        msg.attach(MIMEText(html_content, 'html'))
+        params: resend.Emails.SendParams = {
+            "from": "Twobox Chicken <onboarding@resend.dev>",
+            "to": [req.email],
+            "subject": subject,
+            "html": html_content,
+        }
         
-        server = smtplib.SMTP('smtp.gmail.com', 587, timeout=5)
-        server.starttls()
-        server.login(smtp_email, smtp_password)
-        server.send_message(msg)
-        server.quit()
+        email_response = resend.Emails.send(params)
+        print(f"Resend sent: {email_response}")
         
         return {"message": "Email sent successfully"}
     except Exception as e:
-        print(f"SMTP Error: {e}")
+        print(f"Resend Error: {e}")
         raise HTTPException(status_code=500, detail="Failed to send email")
 
 # WebSocket Endpoint

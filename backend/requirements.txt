@@ -4,3 +4,4 @@ pydantic
 websockets
 sqlalchemy
 python-dotenv
+resend
