@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Copy, CheckCircle2, MapPin, Loader2, Info } from 'lucide-react';
 import './index.css';
 
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = 'https://twobox.onrender.com';
 const GOOGLE_MAPS_REVIEW_URL = 'https://search.google.com/local/writereview?placeid=ChIJ17JclzpVwokR9e8rOOdoQEs';
 
 type Lang = 'en' | 'ko' | 'es';
@@ -81,7 +81,7 @@ function App() {
   const [hasOpenedMaps, setHasOpenedMaps] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
   const [isDone, setIsDone] = useState(false);
-  
+
   const params = new URLSearchParams(window.location.search);
   const langParam = params.get('lang') as Lang;
   const lang: Lang = ['en', 'ko', 'es'].includes(langParam) ? langParam : 'en';
@@ -89,7 +89,7 @@ function App() {
 
   useEffect(() => {
     const session = params.get('session');
-    
+
     if (session) {
       setSessionId(session);
       fetchSessionData(session);
@@ -125,17 +125,17 @@ function App() {
 
   const handleOpenMaps = async () => {
     if (!sessionId) return;
-    
+
     try {
       if (reviewText) {
         await navigator.clipboard.writeText(reviewText);
-        setIsCopied(true); 
+        setIsCopied(true);
       }
-      
+
       window.open(GOOGLE_MAPS_REVIEW_URL, '_blank');
-      
+
       setHasOpenedMaps(true);
-      
+
     } catch (e) {
       console.error('Failed to copy text', e);
       alert(t.errorCopy);
@@ -214,8 +214,8 @@ function App() {
           <div className="review-text">
             {reviewText}
           </div>
-          
-          <button 
+
+          <button
             className={`copy-btn ${isCopied ? 'copied' : ''}`}
             onClick={handleCopy}
           >
@@ -230,7 +230,7 @@ function App() {
 
       <div className="action-area">
         {!hasOpenedMaps ? (
-          <button 
+          <button
             className="primary-btn"
             onClick={handleOpenMaps}
           >
@@ -244,7 +244,7 @@ function App() {
                 <strong>Final:</strong> {t.finalStep}
               </div>
             </div>
-            <button 
+            <button
               className="primary-btn"
               style={{ background: 'var(--success)' }}
               onClick={handleCompleteReview}
