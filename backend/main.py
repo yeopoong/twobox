@@ -35,8 +35,8 @@ app = FastAPI(title="Kiosk Review API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # For dev only. Allow tablet and mobile origins in prod.
-    allow_credentials=True,
+    allow_origins=["*"], 
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
