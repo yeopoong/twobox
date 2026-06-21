@@ -163,9 +163,9 @@ async def send_coupon_email(req: CouponRequest):
           <body style="font-family: Arial, sans-serif; text-align: center; padding: 20px; background-color: #f8fafc;">
             <div style="background-color: white; border: 2px dashed #e51b23; padding: 30px; border-radius: 10px; max-width: 400px; margin: 0 auto;">
               <h1 style="color: #2774ae; margin-bottom: 5px;">TWOBOX CHICKEN</h1>
-              <h2 style="color: #e51b23; margin-top: 0;">{{body_title}}</h2>
-              <p style="font-size: 20px; font-weight: bold; background: #facc15; padding: 15px; border-radius: 8px;">{{req.prize}}</p>
-              <p style="color: #475569; margin-top: 20px; white-space: pre-line;">{{body_desc}}</p>
+              <h2 style="color: #e51b23; margin-top: 0;">{body_title}</h2>
+              <p style="font-size: 20px; font-weight: bold; background: #facc15; padding: 15px; border-radius: 8px;">{req.prize}</p>
+              <p style="color: #475569; margin-top: 20px; white-space: pre-line;">{body_desc}</p>
             </div>
           </body>
         </html>
