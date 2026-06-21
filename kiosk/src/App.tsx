@@ -10,9 +10,18 @@ declare global {
   }
 }
 
-const API_BASE_URL = 'http://localhost:8000';
-const WS_BASE_URL = 'ws://localhost:8000';
-const MOBILE_APP_URL = 'http://localhost:3001';
+// 기존 로컬호스트 주소
+// const API_BASE_URL = 'http://localhost:8000';
+// const WS_BASE_URL = 'ws://localhost:8000';
+// const MOBILE_APP_URL = 'http://localhost:3001';
+
+// Render 배포 주소
+const API_BASE_URL = 'https://twobox.onrender.com';
+const WS_BASE_URL = 'wss://twobox.onrender.com';
+const MOBILE_APP_URL = 'https://twobox-mobile.vercel.app';
+
+
+
 
 type Lang = 'en' | 'ko' | 'es';
 
@@ -123,7 +132,7 @@ function App() {
           }
         }
         if (finalTranscript) {
-           setReviewText((prev) => prev + (prev ? ' ' : '') + finalTranscript);
+          setReviewText((prev) => prev + (prev ? ' ' : '') + finalTranscript);
         }
       };
 
@@ -131,7 +140,7 @@ function App() {
         console.error('Speech recognition error', event.error);
         setIsListening(false);
       };
-      
+
       recognitionRef.current.onend = () => {
         setIsListening(false);
       };
@@ -175,7 +184,7 @@ function App() {
   useEffect(() => {
     if (step === 'qr' && sessionId) {
       const ws = new WebSocket(`${WS_BASE_URL}/ws/${sessionId}`);
-      
+
       ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
         if (data.type === 'SESSION_COMPLETED') {
@@ -190,15 +199,15 @@ function App() {
   useEffect(() => {
     if (step === 'roulette') {
       const timer = setTimeout(() => {
-        const extraSpins = 5 * 360; 
-        const randomPrizeIndex = Math.floor(Math.random() * 4); 
+        const extraSpins = 5 * 360;
+        const randomPrizeIndex = Math.floor(Math.random() * 4);
         const segmentDegree = 360 / t.prizes.length;
-        
+
         const baseStop = 360 - (randomPrizeIndex * segmentDegree) - (segmentDegree / 2);
         const finalDegree = extraSpins + baseStop;
-        
+
         setSpinDegree(finalDegree);
-        
+
         setTimeout(() => {
           setPrize(t.prizes[randomPrizeIndex]);
           setStep('result');
@@ -206,7 +215,7 @@ function App() {
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [step]); 
+  }, [step]);
 
   return (
     <div className="kiosk-container" style={{ position: 'relative' }}>
@@ -224,7 +233,7 @@ function App() {
           </div>
           <h1 style={{ fontSize: '1.5rem', marginTop: '1rem' }}>{t.title}</h1>
           <p className="subtitle">{t.subtitle}</p>
-          
+
           <div className="star-rating">
             {[1, 2, 3, 4, 5].map((star) => (
               <Star
@@ -271,8 +280,8 @@ function App() {
             </button>
           </div>
 
-          <button 
-            className="btn-primary" 
+          <button
+            className="btn-primary"
             onClick={handleSubmitReview}
             disabled={rating === 0 || isSubmitting}
           >
@@ -285,9 +294,9 @@ function App() {
         <div className="glass-panel" style={{ maxWidth: '600px' }}>
           <h1>{t.qrTitle}</h1>
           <p className="subtitle">{t.qrSubtitle}</p>
-          
+
           <div className="qr-container">
-            <QRCodeSVG 
+            <QRCodeSVG
               value={`${MOBILE_APP_URL}/?session=${sessionId}&lang=${lang}`}
               size={256}
               level="H"
@@ -297,9 +306,9 @@ function App() {
 
           <div style={{ marginTop: '1rem', background: 'rgba(0,0,0,0.3)', padding: '1rem', borderRadius: '8px' }}>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>{t.qrLink}</p>
-            <a 
-              href={`${MOBILE_APP_URL}/?session=${sessionId}&lang=${lang}`} 
-              target="_blank" 
+            <a
+              href={`${MOBILE_APP_URL}/?session=${sessionId}&lang=${lang}`}
+              target="_blank"
               rel="noreferrer"
               style={{ color: 'var(--accent)', textDecoration: 'underline', wordBreak: 'break-all' }}
             >
@@ -317,11 +326,11 @@ function App() {
         <div className="glass-panel" style={{ maxWidth: '600px' }}>
           <h1>{t.rouletteTitle}</h1>
           <p className="subtitle">{t.rouletteSub}</p>
-          
+
           <div className="roulette-container">
             <div className="roulette-pointer"></div>
             <div className="roulette-center"></div>
-            <div 
+            <div
               className="roulette-wheel"
               style={{ transform: `rotate(${spinDegree}deg)` }}
             >
@@ -340,8 +349,8 @@ function App() {
           <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
             {t.resultSub}
           </p>
-          <button 
-            className="btn-primary" 
+          <button
+            className="btn-primary"
             onClick={() => {
               setStep('review');
               setRating(0);
