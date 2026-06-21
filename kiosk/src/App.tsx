@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Star, Loader2, Gift, Mic, MicOff } from 'lucide-react';
+import { Star, Loader2, Gift, Mic, MicOff, CheckCircle2 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import './index.css';
 
@@ -46,7 +46,10 @@ const DICT = {
     resultSub: "Please show this screen to the counter staff to claim your prize!",
     restart: "Return to Start",
     prizes: ['Free Americano', 'Cheese Sticks', '$1 Off', 'Free Soda', 'Better Luck Next Time', '$3 Off'],
-    speechLang: 'en-US'
+    speechLang: 'en-US',
+    emailPlaceholder: "Enter email to receive coupon",
+    sendEmail: "Send Coupon",
+    emailSuccess: "Coupon sent to your email!"
   },
   ko: {
     title: "투박스 치킨(Twobox Chicken), 어떠셨나요? 🍗",
@@ -68,7 +71,10 @@ const DICT = {
     resultSub: "카운터 직원에게 이 화면을 보여주시고 상품을 받아가세요!",
     restart: "처음으로 돌아가기",
     prizes: ['아메리카노 무료', '치즈스틱', '1,000원 할인', '콜라/사이다', '다음 기회에', '3,000원 할인'],
-    speechLang: 'ko-KR'
+    speechLang: 'ko-KR',
+    emailPlaceholder: "이메일 입력하고 쿠폰 받기",
+    sendEmail: "이메일로 전송",
+    emailSuccess: "이메일로 쿠폰이 전송되었습니다!"
   },
   es: {
     title: "¿Qué tal su Twobox Chicken? 🍗",
@@ -90,7 +96,10 @@ const DICT = {
     resultSub: "¡Muestre esta pantalla al personal del mostrador para reclamar su premio!",
     restart: "Volver al inicio",
     prizes: ['Americano gratis', 'Palitos de queso', '$1 de descuento', 'Refresco gratis', 'Mejor suerte la próxima vez', '$3 de descuento'],
-    speechLang: 'es-ES'
+    speechLang: 'es-ES',
+    emailPlaceholder: "Ingrese correo para recibir cupón",
+    sendEmail: "Enviar cupón",
+    emailSuccess: "¡Cupón enviado a tu correo!"
   }
 };
 
@@ -108,6 +117,10 @@ function App() {
   const [prize, setPrize] = useState('');
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<any>(null);
+  
+  const [email, setEmail] = useState('');
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
 
   // Update speech recognition language when lang changes
   useEffect(() => {
@@ -178,6 +191,24 @@ function App() {
       alert(t.error);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleSendEmail = async () => {
+    if (!email.includes('@')) return;
+    setIsSendingEmail(true);
+    try {
+      await fetch(`${API_BASE_URL}/send-coupon`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, prize, lang })
+      });
+      setEmailSent(true);
+    } catch (e) {
+      console.error(e);
+      alert(t.error);
+    } finally {
+      setIsSendingEmail(false);
     }
   };
 
@@ -355,18 +386,49 @@ function App() {
         <div className="glass-panel">
           <Gift size={64} color="var(--warning)" style={{ margin: '0 auto 1.5rem', display: 'block' }} />
           <h1>{t.resultTitle}</h1>
-          <p className="subtitle" style={{ fontSize: '2rem', color: 'white', fontWeight: 700 }}>
-            {t.resultPrize(prize)}
-          </p>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
-            {t.resultSub}
-          </p>
+          
+          <div className="coupon-ticket">
+            <div className="coupon-title">TWOBOX CHICKEN</div>
+            <div className="coupon-prize">
+              {prize}
+            </div>
+            <p style={{ color: '#475569', marginTop: '1rem', fontWeight: 'bold' }}>{t.resultSub}</p>
+          </div>
+
+          {emailSent ? (
+            <div className="email-success">
+              <CheckCircle2 size={24} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '0.5rem' }} />
+              {t.emailSuccess}
+            </div>
+          ) : (
+            <div className="email-container">
+              <input 
+                type="email" 
+                className="email-input" 
+                placeholder={t.emailPlaceholder}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              <button 
+                className="btn-primary" 
+                style={{ width: '100%' }}
+                onClick={handleSendEmail}
+                disabled={!email.includes('@') || isSendingEmail}
+              >
+                {isSendingEmail ? <Loader2 className="animate-spin" /> : t.sendEmail}
+              </button>
+            </div>
+          )}
+
           <button
             className="btn-primary"
+            style={{ background: 'transparent', border: '2px solid rgba(255,255,255,0.2)', boxShadow: 'none' }}
             onClick={() => {
               setStep('review');
               setRating(0);
               setReviewText('');
+              setEmail('');
+              setEmailSent(false);
             }}
           >
             {t.restart}

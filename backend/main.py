@@ -6,6 +6,13 @@ from pydantic import BaseModel
 import uuid
 import datetime
 from typing import Dict, List
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Database Setup
 SQLALCHEMY_DATABASE_URL = "sqlite:///./kiosk.db"
@@ -52,6 +59,11 @@ class SessionResponse(BaseModel):
     status: str
     rating: int
     review_text: str
+
+class CouponRequest(BaseModel):
+    email: str
+    prize: str
+    lang: str = "ko"
 
 # Connection Manager for WebSockets
 class ConnectionManager:
@@ -112,6 +124,65 @@ async def complete_session(session_id: str, db: Session = Depends(get_db)):
     # Notify connected tablet
     await manager.broadcast_to_session(session_id, {"type": "SESSION_COMPLETED", "session_id": session_id})
     return {"message": "Session completed successfully"}
+
+@app.post("/send-coupon")
+async def send_coupon_email(req: CouponRequest):
+    smtp_email = os.getenv("SMTP_EMAIL")
+    smtp_password = os.getenv("SMTP_PASSWORD")
+    
+    if not smtp_email or not smtp_password:
+        # If not configured, just log and return success (Mock mode)
+        print(f"[MOCK EMAIL] To: {req.email}, Prize: {req.prize}")
+        return {"message": "Mock email sent (SMTP not configured)"}
+        
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = smtp_email
+        msg['To'] = req.email
+        
+        # Simple i18n
+        subject = "Your Twobox Chicken Coupon!"
+        body_title = "Congratulations!"
+        body_desc = f"You won: {req.prize}"
+        
+        if req.lang == 'ko':
+            subject = "Twobox Chicken 당첨 쿠폰이 도착했습니다!"
+            body_title = "축하합니다!"
+            body_desc = f"당첨 상품: {req.prize}\n매장 카운터에서 이 이메일을 보여주세요."
+        elif req.lang == 'es':
+            subject = "¡Tu cupón de Twobox Chicken!"
+            body_title = "¡Felicidades!"
+            body_desc = f"Has ganado: {req.prize}\nMuestre este correo en el mostrador."
+        else:
+            body_desc += "\nPlease show this email at the counter."
+
+        msg['Subject'] = subject
+        
+        html_content = f"""
+        <html>
+          <body style="font-family: Arial, sans-serif; text-align: center; padding: 20px; background-color: #f8fafc;">
+            <div style="background-color: white; border: 2px dashed #e51b23; padding: 30px; border-radius: 10px; max-width: 400px; margin: 0 auto;">
+              <h1 style="color: #2774ae; margin-bottom: 5px;">TWOBOX CHICKEN</h1>
+              <h2 style="color: #e51b23; margin-top: 0;">{{body_title}}</h2>
+              <p style="font-size: 20px; font-weight: bold; background: #facc15; padding: 15px; border-radius: 8px;">{{req.prize}}</p>
+              <p style="color: #475569; margin-top: 20px; white-space: pre-line;">{{body_desc}}</p>
+            </div>
+          </body>
+        </html>
+        """
+        
+        msg.attach(MIMEText(html_content, 'html'))
+        
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()
+        server.login(smtp_email, smtp_password)
+        server.send_message(msg)
+        server.quit()
+        
+        return {"message": "Email sent successfully"}
+    except Exception as e:
+        print(f"SMTP Error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to send email")
 
 # WebSocket Endpoint
 @app.websocket("/ws/{session_id}")
