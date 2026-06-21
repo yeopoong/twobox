@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Star, Loader2, CheckCircle2, Gift, Mic, MicOff, Globe } from 'lucide-react';
+import { Star, Loader2, Gift, Mic, MicOff } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import './index.css';
 
