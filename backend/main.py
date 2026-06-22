@@ -153,7 +153,8 @@ async def send_coupon_email(req: CouponRequest, db: Session = Depends(get_db)):
     db_coupon = CouponModel(
         id=coupon_code,
         email=req.email,
-        prize=req.prize
+        prize=req.prize,
+        is_used=False
     )
     db.add(db_coupon)
     db.commit()
