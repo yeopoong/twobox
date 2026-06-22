@@ -501,11 +501,11 @@ function App() {
             <input 
               type="text" 
               className="email-input" 
-              placeholder="Enter 6-digit coupon code"
+              placeholder="Enter 4-digit coupon code"
               value={staffCode}
               onChange={(e) => setStaffCode(e.target.value.toUpperCase())}
               style={{ textAlign: 'center', fontSize: '1.5rem', letterSpacing: '2px' }}
-              maxLength={6}
+              maxLength={4}
             />
             <button className="btn-primary" onClick={handleVerifyCoupon}>Verify Code</button>
           </div>

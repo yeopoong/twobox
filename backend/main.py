@@ -146,8 +146,9 @@ async def complete_session(session_id: str, db: Session = Depends(get_db)):
 async def send_coupon_email(req: CouponRequest, db: Session = Depends(get_db)):
     resend_api_key = os.getenv("RESEND_API_KEY")
     
-    # Generate random 6-character code
-    coupon_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+    # Generate 4-digit sequential code (0000, 0001, ...)
+    coupon_count = db.query(CouponModel).count()
+    coupon_code = f"{coupon_count:04d}"
     
     db_coupon = CouponModel(
         id=coupon_code,
