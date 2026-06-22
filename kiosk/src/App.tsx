@@ -49,7 +49,14 @@ const DICT = {
     speechLang: 'en-US',
     emailPlaceholder: "Enter email to receive coupon",
     sendEmail: "Send Coupon",
-    emailSuccess: "Coupon sent to your email!"
+    emailSuccess: "Coupon sent to your email!",
+    close: "Close",
+    staffDashboard: "Staff Dashboard",
+    enterCouponCode: "Enter 4-digit coupon code",
+    verifyCode: "Verify Code",
+    alreadyUsed: "ALREADY USED",
+    markAsUsed: "MARK AS USED",
+    closeDashboard: "Close Dashboard"
   },
   ko: {
     title: "투박스 치킨(Twobox Chicken), 어떠셨나요? 🍗",
@@ -74,7 +81,14 @@ const DICT = {
     speechLang: 'ko-KR',
     emailPlaceholder: "이메일 입력하고 쿠폰 받기",
     sendEmail: "이메일로 전송",
-    emailSuccess: "이메일로 쿠폰이 전송되었습니다!"
+    emailSuccess: "이메일로 쿠폰이 전송되었습니다!",
+    close: "닫기",
+    staffDashboard: "직원 전용 대시보드",
+    enterCouponCode: "4자리 쿠폰 번호 입력",
+    verifyCode: "조회하기",
+    alreadyUsed: "이미 사용됨",
+    markAsUsed: "사용 완료 처리",
+    closeDashboard: "대시보드 닫기"
   },
   es: {
     title: "¿Qué tal su Twobox Chicken? 🍗",
@@ -99,7 +113,14 @@ const DICT = {
     speechLang: 'es-ES',
     emailPlaceholder: "Ingrese correo para recibir cupón",
     sendEmail: "Enviar cupón",
-    emailSuccess: "¡Cupón enviado a tu correo!"
+    emailSuccess: "¡Cupón enviado a tu correo!",
+    close: "Cerrar",
+    staffDashboard: "Panel de Empleados",
+    enterCouponCode: "Ingrese código de 4 dígitos",
+    verifyCode: "Verificar Código",
+    alreadyUsed: "YA USADO",
+    markAsUsed: "MARCAR COMO USADO",
+    closeDashboard: "Cerrar Panel"
   }
 };
 
@@ -495,19 +516,19 @@ function App() {
 
       {step === 'staff' && (
         <div className="glass-panel" style={{ textAlign: 'center' }}>
-          <h1 style={{ color: 'var(--brand-blue)', marginBottom: '2rem' }}>Staff Dashboard</h1>
+          <h1 style={{ color: 'var(--brand-blue)', marginBottom: '2rem' }}>{t.staffDashboard}</h1>
           
           <div className="email-container">
             <input 
               type="text" 
               className="email-input" 
-              placeholder="Enter 4-digit coupon code"
+              placeholder={t.enterCouponCode}
               value={staffCode}
               onChange={(e) => setStaffCode(e.target.value.toUpperCase())}
               style={{ textAlign: 'center', fontSize: '1.5rem', letterSpacing: '2px' }}
               maxLength={4}
             />
-            <button className="btn-primary" onClick={handleVerifyCoupon}>Verify Code</button>
+            <button className="btn-primary" onClick={handleVerifyCoupon}>{t.verifyCode}</button>
           </div>
 
           {staffError && <p style={{ color: 'var(--brand-red)', fontWeight: 'bold' }}>{staffError}</p>}
@@ -519,7 +540,7 @@ function App() {
               
               {staffCouponResult.is_used ? (
                 <div style={{ background: 'rgba(229, 27, 35, 0.2)', color: 'var(--brand-red)', padding: '1rem', borderRadius: '8px', fontWeight: 'bold', fontSize: '1.5rem' }}>
-                  ALREADY USED
+                  {t.alreadyUsed}
                 </div>
               ) : (
                 <button 
@@ -527,7 +548,7 @@ function App() {
                   style={{ background: 'var(--success)', width: '100%', marginTop: '1rem' }}
                   onClick={handleUseCoupon}
                 >
-                  MARK AS USED
+                  {t.markAsUsed}
                 </button>
               )}
             </div>
@@ -538,7 +559,7 @@ function App() {
             style={{ background: 'transparent', border: '2px solid rgba(255,255,255,0.2)', boxShadow: 'none', marginTop: '2rem' }}
             onClick={() => setStep('review')}
           >
-            Close Dashboard
+            {t.closeDashboard}
           </button>
         </div>
       )}
